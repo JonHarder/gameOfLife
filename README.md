@@ -5,5 +5,5 @@ A simple ncurses implementation of [Conway's Game of Life](https://en.wikipedia.
 ------------
 
 ### TODO
-    * Resize editing space on the fly
-    * Read seed configuration from file
+* Resize editing space on the fly
+* Read seed configuration from file
