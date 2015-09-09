@@ -404,7 +404,10 @@ int get_dim(const char* prompt) {
 }
 
 void print_instructions() {
-  printw("hit q to run 
+  printw("hit q to run simulation\tArrow keys to move\n");
+  printw("Enter to toggle alive/dead and move down a row\n");
+  printw("Space to toggle alive/dead and move right a column\n");
+}
 
 board start_editor() {
   int h = get_dim("enter height: ");
@@ -420,13 +423,16 @@ board start_editor() {
   board b = init_board(h, w);
   int key;
   print_board(0, 0, b);
+  print_instructions();
   move(y,x);
   while((key = getch()) != 113) { // wait until user hits q
     print_board(0, 0, b);
+    print_instructions();
     move(y,x);
     if(key == 10) { // enter key
       toggle_alive(b,y,x_1);
       print_board(0,0,b);
+      print_instructions();
       y++;
       move(y,x);
       refresh();
@@ -434,6 +440,7 @@ board start_editor() {
     if(key == 32) { // space bar
       toggle_alive(b,y,x_1);
       print_board(0,0,b);
+      print_instructions();
       x+=2;
       x_1++;
       move(y,x);
