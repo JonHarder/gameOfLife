@@ -4,10 +4,12 @@
 #include<ncurses.h>
 #include<string.h>
 
-typedef struct {
+struct cell_t {
   bool alive;    // true if alive, false if dead
   int neighbors; // number of alive neighbors
-} cell;
+};
+
+typedef struct cell_t cell;
 
 struct board_t {
   int width;
@@ -24,6 +26,8 @@ cell init_cell() {
   return c;
 }
 
+// returns equivelent of true if given strings are
+// equal to eachother
 int streq(const char* s1, const char* s2) {
   return !strcmp(s1, s2);
 }
@@ -32,9 +36,12 @@ void set_alive(board b, int h, int w, bool alive) {
   b->cells[h][w].alive = alive;
 }
 
+int is_alive(board b, int h, int w) {
+  return b->cells[h][w].alive;
+}
+
 void toggle_alive(board b, int h, int w) {
-  int alive = b->cells[h][w].alive;
-  if(alive) {
+  if(is_alive(b, h, w)) {
     set_alive(b,h, w, false);
   } else {
     set_alive(b,h, w, true);
@@ -85,6 +92,11 @@ board init_board_from_chars(char* pic, int h, int w) {
   return b;
 }
 
+board init_board_from_file(const char* file) {
+  FILE* f = open(file, "r");
+  return init_board(1,1);
+}
+
 board clone_board(board b) {
   board newboard = init_board(b->height, b->width);
   int i,j;
@@ -105,6 +117,17 @@ void free_board(board b) {
   free(b);
 }
 
+board change_board_size(board b, int diff_x, int diff_y) {
+  // takes a board, and some x,y values which alter the size
+  // of said board, growing/shrinking the boards dimentions
+  // according to them
+  // NOTE: this breaks when the board grows as cloning
+  // a board to a size larger than itself is undefined behavior
+  b->width = b->width + diff_x;
+  b->height = b->height + diff_y;
+  return clone_board(b);
+}
+
 bool alive_at(board b, int x, int y) {
   if(x >= b->width)
     x = 0;
@@ -114,7 +137,7 @@ bool alive_at(board b, int x, int y) {
     y = 0;
   if(y < 0)
     y = b->height-1;
-  return b->cells[y][x].alive;
+  return is_alive(b, y, x);
 }
 
 int num_neighbors(board b, int y, int x) {
@@ -446,12 +469,12 @@ board start_editor() {
       move(y,x);
       refresh();
     }
-    if(key == 260 && x > 0) { // left arrow key
+    if(key == 260 && x_1 > 0) { // left arrow key
       x-=2;
       x_1--;
       move(y,x);
     }
-    if(key == 261 && x < w*2) { // right arrow key
+    if(key == 261 && x_1 < w-1) { // right arrow key
       x+=2;
       x_1++;
       move(y,x);
@@ -460,9 +483,49 @@ board start_editor() {
       y-=1;
       move(y,x);
     }
-    if(key == 258 && y < h) { // down arrow key
+    if(key == 258 && y < h-1) { // down arrow key
       y+=1;
       move(y,x);
+    }
+    if(key == 544) { // control left
+      board newboard = change_board_size(b, -1, 0);
+      free_board(b);
+      b = newboard;
+      w--;
+      print_board(0,0,b);
+      print_instructions();
+      move(y,x);
+      refresh();
+    }
+    if(key == 559) {
+      board newboard = change_board_size(b, 1, 0);
+      free_board(b);
+      b = newboard;
+      w++;
+      print_board(0,0,b);
+      print_instructions();
+      move(y,x);
+      refresh();
+    }
+    if(key == 565) { // control up
+      board newboard = change_board_size(b, 0, -1);
+      free_board(b);
+      b = newboard;
+      h--;
+      print_board(0,0,b);
+      print_instructions();
+      move(y,x);
+      refresh();
+    }
+    if(key == 524) { // control down
+      board newboard = change_board_size(b, 0, 1);
+      free_board(b);
+      b = newboard;
+      h++;
+      print_board(0,0,b);
+      print_instructions();
+      move(y,x);
+      refresh();
     }
     refresh();
   }
